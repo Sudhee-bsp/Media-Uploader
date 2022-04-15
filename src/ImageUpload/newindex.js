@@ -13,7 +13,7 @@ import {
 } from "mdb-react-ui-kit";
 
 import FileUpload from "../file-upload/file-upload.component";
-
+import { getDatabase,set,ref} from 'firebase/database';
 function Newindex() {
   const [images, setImages] = useState([]);
   const [urls, setUrls] = useState([]);
@@ -61,15 +61,42 @@ function Newindex() {
         }
       );
     });
-
     Promise.all(promises)
-      .then(() => console.log("All images uploaded"))
+      .then(
+        () => {console.log("All images uploaded")
+          // console.log(urls.length);
+          // if(urls.length === numfiles){
+          //   console.log(urls);
+          //   const db=getDatabase();
+          //   set(ref(db, "TempusersTest/hemanth"),urls)
+          //   .then(()=>{
+          //       console.log("post added");
+          //   })
+          //   .catch((error) => {
+          //   // The write failed...
+          //       console.log(error);
+          //   });
+          // }
+        })
       .catch((err) => console.log(err));
   };
 
-  console.log("images: ", images);
-  console.log("urls", urls);
+  // console.log("images: ", images);
+  // console.log("urls", urls);
 
+  if(urls.length !== 0){
+    console.log(urls.length);
+        console.log(urls);
+        const db=getDatabase();
+        set(ref(db, "TempusersTest/hemanth"),urls)
+        .then(()=>{
+            console.log("post added");
+        })
+        .catch((error) => {
+        // The write failed...
+            console.log(error);
+        });
+  }
   const [newUserInfo, setNewUserInfo] = useState({
     profileImages: [],
   });

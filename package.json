@@ -6,6 +6,7 @@
     "@testing-library/jest-dom": "^5.16.3",
     "@testing-library/react": "^12.1.4",
     "@testing-library/user-event": "^13.5.0",
+    "env-cmd": "^10.1.0",
     "firebase": "^9.6.10",
     "mdb-react-ui-kit": "^3.0.0",
     "node-sass": "^7.0.1",
@@ -16,8 +17,8 @@
     "web-vitals": "^2.1.4"
   },
   "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build",
+    "start": "env-cmd -f .env.firebase react-scripts start",
+    "build": "env-cmd -f .env.firebase react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
   },
