@@ -64,19 +64,6 @@ function Newindex() {
     Promise.all(promises)
       .then(
         () => {console.log("All images uploaded")
-          // console.log(urls.length);
-          // if(urls.length === numfiles){
-          //   console.log(urls);
-          //   const db=getDatabase();
-          //   set(ref(db, "TempusersTest/hemanth"),urls)
-          //   .then(()=>{
-          //       console.log("post added");
-          //   })
-          //   .catch((error) => {
-          //   // The write failed...
-          //       console.log(error);
-          //   });
-          // }
         })
       .catch((err) => console.log(err));
   };
