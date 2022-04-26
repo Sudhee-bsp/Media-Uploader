@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import storage from "../Firebase/index";
 import {
   MDBCard,
@@ -11,14 +11,41 @@ import {
   MDBProgressBar,
   MDBContainer,
 } from "mdb-react-ui-kit";
+import axios from "axios";
+import fileDownload from "js-file-download";
+import { saveAs } from "file-saver";
 
 import FileUpload from "../file-upload/file-upload.component";
-import { getDatabase,set,ref} from 'firebase/database';
+import {
+  getDatabase,
+  set,
+  ref,
+  onValue,
+  update,
+  push,
+  child,
+} from "firebase/database";
 function Newindex() {
   const [images, setImages] = useState([]);
   const [urls, setUrls] = useState([]);
   const [progress, setProgress] = useState(0);
   const [numfiles, setNumfiles] = useState(0);
+  const [status, setStatus] = useState("");
+  const [copy, setCopy] = useState("Copy link!");
+
+  // setting filesurls from firebase
+  const [filesurls, setFilesurls] = useState([]);
+
+  // get files urls from firebase
+  useEffect(() => {
+    const db = getDatabase();
+    onValue(ref(db, "/TempusersTest/hemanth"), async (snapshot) => {
+      if (snapshot.exists()) {
+        console.log(snapshot.val());
+        await setFilesurls(snapshot.val().attachments);
+      }
+    });
+  }, []);
 
   const updateUploadedFiles = (files) => {
     setNewUserInfo({ ...newUserInfo, profileImages: files });
@@ -46,6 +73,7 @@ function Newindex() {
             (snapshot.bytesTransferred / snapshot.totalBytes) * 100
           );
           setProgress(progress);
+          setStatus("Uploading...");
         },
         (error) => {
           console.log(error);
@@ -57,33 +85,39 @@ function Newindex() {
             .getDownloadURL()
             .then((urls) => {
               setUrls((prevState) => [...prevState, urls]);
+              setFilesurls((prevState) => [...prevState, urls]);
+              setImages([]);
+              setNumfiles(0);
+              setStatus("Done, UPLOADED!");
             });
         }
       );
     });
     Promise.all(promises)
-      .then(
-        () => {console.log("All images uploaded")
-        })
+      .then(() => {
+        console.log("All images uploaded");
+      })
       .catch((err) => console.log(err));
   };
 
-  // console.log("images: ", images);
-  // console.log("urls", urls);
-
-  if(urls.length !== 0){
+  if (urls.length !== 0) {
     console.log(urls.length);
-        console.log(urls);
-        const db=getDatabase();
-        set(ref(db, "TempusersTest/hemanth"),urls)
-        .then(()=>{
-            console.log("post added");
-        })
-        .catch((error) => {
-        // The write failed...
-            console.log(error);
-        });
+    console.log(urls);
+    const db = getDatabase();
+
+    // update just urls in realtime firebase
+    const dburls = {};
+    dburls["/TempusersTest/hemanth/attachments/"] = filesurls;
+
+    update(ref(db), dburls)
+      .then(() => {
+        console.log("post added");
+      })
+      .catch((error) => {
+        console.log(error);
+      });
   }
+
   const [newUserInfo, setNewUserInfo] = useState({
     profileImages: [],
   });
@@ -91,6 +125,25 @@ function Newindex() {
   const handleSubmit = (event) => {
     event.preventDefault();
     //logic to handle form...
+  };
+
+  const handleDownload = (url, filename) => {
+    axios
+      .get(url, {
+        responseType: "blob",
+      })
+      .then((res) => {
+        fileDownload(res.data, filename);
+      });
+  };
+
+  const saveFile = (url) => {
+    saveAs(url, "example.pdf");
+  };
+
+  const copyText = (entryText) => {
+    navigator.clipboard.writeText(entryText);
+    setCopy("Copied!");
   };
 
   return (
@@ -119,35 +172,44 @@ function Newindex() {
         <button onClick={handleUpload} type="submit">
           UPLOAD
         </button>
+        <br />
+        <span>{status}</span>
       </form>
 
       <br />
-
+      <br />
+      <span>YOUR ATTACHMENTS:</span>
+      <br />
       <MDBContainer>
         <MDBRow>
-          {urls.map((url, i) => (
-            <MDBCol xl="3" sm="3">
-              <MDBCard style={{ width: "18rem" }} key={i}>
-                <MDBCardImage
-                  src={url || "http://via.placeholder.com/300"}
-                  alt="your-file"
-                  position="top"
-                  width={250}
-                  height={250}
-                />
-                <MDBCardBody>
-                  <a href={url} download target="_blank">
-                    <MDBBtn outline rounded className="mx-2" color="info">
+          {filesurls &&
+            filesurls.map((url, i) => (
+              <MDBCol xl="3" sm="3" key={i}>
+                <MDBCard style={{ width: "18rem" }}>
+                  <MDBCardImage
+                    src={url || "http://via.placeholder.com/300"}
+                    alt="your-file"
+                    position="top"
+                    width={250}
+                    height={250}
+                  />
+                  <MDBCardBody>
+                    {/* <a href={url} download> */}
+                    <MDBBtn
+                      outline
+                      rounded
+                      className="mx-2"
+                      color="info"
+                      onClick={() => saveFile(url)}
+                      target="_blank"
+                    >
                       Download
                     </MDBBtn>
-                  </a>
-                  {/* <MDBBtn floating tag="a">
-                  <MDBIcon fas icon="download" />
-                </MDBBtn> */}
-                </MDBCardBody>
-              </MDBCard>
-            </MDBCol>
-          ))}
+                    {/* </a> */}
+                  </MDBCardBody>
+                </MDBCard>
+              </MDBCol>
+            ))}
         </MDBRow>
       </MDBContainer>
     </div>
