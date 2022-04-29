@@ -11,6 +11,13 @@ import {
   MDBProgressBar,
   MDBContainer,
   MDBBadge,
+  MDBModal,
+  MDBModalDialog,
+  MDBModalContent,
+  MDBModalHeader,
+  MDBModalTitle,
+  MDBModalBody,
+  MDBModalFooter,
 } from "mdb-react-ui-kit";
 import axios from "axios";
 import fileDownload from "js-file-download";
@@ -28,6 +35,8 @@ import {
 } from "firebase/database";
 import { getStorage, getMetadata, ref as sRef } from "firebase/storage";
 
+import "./newindex.css";
+
 function Newindex() {
   const [images, setImages] = useState([]);
   const [urls, setUrls] = useState([]);
@@ -43,6 +52,10 @@ function Newindex() {
   const [filename, setFilename] = useState("");
   const [filetype, setFiletype] = useState("");
   const [filesize, setFilesize] = useState("");
+
+  // modal box for delete confirmation
+  const [staticModal, setStaticModal] = useState(false);
+  const toggleShow = () => setStaticModal(!staticModal);
 
   // get files urls from firebase
   useEffect(() => {
@@ -189,6 +202,7 @@ function Newindex() {
     update(ref(db), updates)
       .then(() => {
         console.log("URL deleted");
+        toggleShow();
       })
       .catch((error) => {
         console.log(error);
@@ -222,14 +236,22 @@ function Newindex() {
           onChange={handleChange}
         />
         <span>Selected {numfiles} files: </span>
-        <button onClick={handleUpload} type="submit">
+        <MDBBtn
+          rounded
+          className="mx-2"
+          color="success"
+          onClick={handleUpload}
+          type="submit"
+        >
           UPLOAD
-        </button>
-        <br />
+        </MDBBtn>
         <br />
         <span>{status}</span>
       </form>
-      <span>YOUR ATTACHMENTS:</span>
+      <br />
+      <span>
+        <b>YOUR ATTACHMENTS:</b>
+      </span>
       <br />
       <br />
       <br />
@@ -268,16 +290,52 @@ function Newindex() {
                         >
                           Download
                         </MDBBtn>
+
                         <MDBBtn
                           outline
                           rounded
                           className="mx-2 my-2"
                           color="danger"
-                          onClick={() => deleteurl(i, url)}
-                          target="_blank"
+                          onClick={toggleShow}
                         >
-                          Delete
+                          Delete File
                         </MDBBtn>
+                        <MDBModal
+                          staticBackdrop
+                          tabIndex="-1"
+                          show={staticModal}
+                          setShow={setStaticModal}
+                        >
+                          <MDBModalDialog className="MDBModalDialog-cls">
+                            <MDBModalContent className="MDBModalContent-cls">
+                              <MDBModalHeader>
+                                <MDBModalTitle>
+                                  Are you sure to Delete this file?
+                                </MDBModalTitle>
+                                <MDBBtn
+                                  className="btn-close"
+                                  color="none"
+                                  onClick={toggleShow}
+                                ></MDBBtn>
+                              </MDBModalHeader>
+                              <MDBModalFooter>
+                                <MDBBtn
+                                  className="mx-4"
+                                  color="info"
+                                  onClick={toggleShow}
+                                >
+                                  Cancel
+                                </MDBBtn>
+                                <MDBBtn
+                                  color="danger"
+                                  onClick={() => deleteurl(i, url)}
+                                >
+                                  Delete
+                                </MDBBtn>
+                              </MDBModalFooter>
+                            </MDBModalContent>
+                          </MDBModalDialog>
+                        </MDBModal>
                       </MDBCardBody>
                     </MDBCard>
                   </MDBCol>
