@@ -183,30 +183,26 @@ function Newindex() {
     var fileRef = storage.refFromURL(url);
 
     // Delete the file using the delete() method
-    // fileRef
-    //   .delete()
-    //   .then(function() {
-    //     // File deleted successfully
-    //     console.log("File Deleted");
-    //     const updates = {};
-    //     updates["/TempusersTest/hemanth/attachments/" + urlid] = null;
-    //     update(ref(db), updates);
-    //   })
-    //   .catch(function(error) {
-    //     // Some Error occurred
-    //   });
-
-    // update the file url in firebase
-    const updates = {};
-    updates["/TempusersTest/hemanth/attachments/" + urlid] = "no_file";
-    update(ref(db), updates)
-      .then(() => {
-        console.log("URL deleted");
-        toggleShow();
+    fileRef
+      .delete()
+      .then(function() {
+        // File deleted successfully
+        console.log("File Deleted");
+        const updates = {};
+        updates["/TempusersTest/hemanth/attachments/" + urlid] = "no_file";
+        update(ref(db), updates)
+          .then(() => {
+            console.log("URL deleted");
+          })
+          .catch((error) => {
+            console.log(error);
+          });
       })
-      .catch((error) => {
+      .catch(function(error) {
         console.log(error);
       });
+
+    
   };
 
   const copyText = (entryText, i) => {
