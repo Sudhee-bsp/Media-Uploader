@@ -10,6 +10,7 @@ import {
   MDBProgress,
   MDBProgressBar,
   MDBContainer,
+  MDBBadge,
 } from "mdb-react-ui-kit";
 import axios from "axios";
 import fileDownload from "js-file-download";
@@ -25,16 +26,23 @@ import {
   push,
   child,
 } from "firebase/database";
+import { getStorage, getMetadata, ref as sRef } from "firebase/storage";
+
 function Newindex() {
   const [images, setImages] = useState([]);
   const [urls, setUrls] = useState([]);
   const [progress, setProgress] = useState(0);
   const [numfiles, setNumfiles] = useState(0);
   const [status, setStatus] = useState("");
-  const [copy, setCopy] = useState("Copy link!");
+  const [copy, setCopy] = useState("copy link!");
 
   // setting filesurls from firebase
   const [filesurls, setFilesurls] = useState([]);
+
+  // all file metadata
+  const [filename, setFilename] = useState("");
+  const [filetype, setFiletype] = useState("");
+  const [filesize, setFilesize] = useState("");
 
   // get files urls from firebase
   useEffect(() => {
@@ -66,6 +74,7 @@ function Newindex() {
     images.map((image) => {
       const uploadTask = storage.ref(`images/${image.name}`).put(image);
       promises.push(uploadTask);
+
       uploadTask.on(
         "state_changed",
         (snapshot) => {
@@ -73,7 +82,7 @@ function Newindex() {
             (snapshot.bytesTransferred / snapshot.totalBytes) * 100
           );
           setProgress(progress);
-          setStatus("Uploading...");
+          setStatus("(Uploading...)");
         },
         (error) => {
           console.log(error);
@@ -88,10 +97,23 @@ function Newindex() {
               setFilesurls((prevState) => [...prevState, urls]);
               setImages([]);
               setNumfiles(0);
-              setStatus("Done, UPLOADED!");
+              setStatus("(Done, UPLOADED!)");
             });
         }
       );
+
+      const storageRef = getStorage();
+      const fileRef = sRef(storageRef, `images/${image.name}`);
+      // Get metadata properties
+      getMetadata(fileRef)
+        .then((metadata) => {
+          setFilename(metadata.name);
+          setFiletype(metadata.contentType);
+          setFilesize(metadata.size);
+        })
+        .catch((error) => {
+          console.log("Couldn't fetch metadata");
+        });
     });
     console.log(filesurls);
     Promise.all(promises)
@@ -141,28 +163,40 @@ function Newindex() {
   const saveFile = (url) => {
     saveAs(url, "example.pdf");
   };
+
   const deleteurl = (urlid, url) => {
     console.log(urlid);
     const db = getDatabase();
     var fileRef = storage.refFromURL(url);
+
     // Delete the file using the delete() method
-    fileRef
-      .delete()
-      .then(function() {
-        // File deleted successfully
-        console.log("File Deleted");
-        const updates = {};
-        updates["/TempusersTest/hemanth/attachments/" + urlid] = null;
-        update(ref(db), updates);
+    // fileRef
+    //   .delete()
+    //   .then(function() {
+    //     // File deleted successfully
+    //     console.log("File Deleted");
+    //     const updates = {};
+    //     updates["/TempusersTest/hemanth/attachments/" + urlid] = null;
+    //     update(ref(db), updates);
+    //   })
+    //   .catch(function(error) {
+    //     // Some Error occurred
+    //   });
+
+    // update the file url in firebase
+    const updates = {};
+    updates["/TempusersTest/hemanth/attachments/" + urlid] = "no_file";
+    update(ref(db), updates)
+      .then(() => {
+        console.log("URL deleted");
       })
-      .catch(function(error) {
-        // Some Error occurred
+      .catch((error) => {
+        console.log(error);
       });
   };
 
-  const copyText = (entryText) => {
+  const copyText = (entryText, i) => {
     navigator.clipboard.writeText(entryText);
-    setCopy("Copied!");
   };
 
   return (
@@ -195,51 +229,61 @@ function Newindex() {
         <br />
         <span>{status}</span>
       </form>
-
-      <br />
-      <br />
       <span>YOUR ATTACHMENTS:</span>
+      <br />
+      <br />
       <br />
       <MDBContainer>
         <MDBRow>
-          {filesurls &&
-            filesurls.map((url, i) => (
-              <MDBCol xl="3" sm="3" key={i}>
-                <MDBCard style={{ width: "18rem" }}>
-                  <MDBCardImage
-                    src={url || "http://via.placeholder.com/300"}
-                    alt="your-file"
-                    position="top"
-                    width={250}
-                    height={250}
-                  />
-                  <MDBCardBody>
-                    {/* <a href={url} download> */}
-                    <MDBBtn
-                      outline
-                      rounded
+          {// display map of urls only if no_file
+          filesurls &&
+            filesurls.map((url, i) => {
+              if (url !== "no_file") {
+                return (
+                  <MDBCol xl="3" sm="3" key={i}>
+                    <MDBBadge
+                      pill
                       className="mx-2"
-                      color="info"
-                      onClick={() => saveFile(url)}
-                      target="_blank"
+                      color="warning"
+                      onClick={() => copyText(url, i)}
                     >
-                      Download
-                    </MDBBtn>
-                    <MDBBtn
-                      outline
-                      rounded
-                      className="mx-2"
-                      color="info"
-                      onClick={() => deleteurl(i, url)}
-                      target="_blank"
-                    >
-                      Delete
-                    </MDBBtn>
-                    {/* </a> */}
-                  </MDBCardBody>
-                </MDBCard>
-              </MDBCol>
-            ))}
+                      {copy}
+                    </MDBBadge>
+                    <MDBCard style={{ width: "18rem" }}>
+                      <MDBCardImage
+                        src={url || "http://via.placeholder.com/300"}
+                        alt="your-file"
+                        position="top"
+                        width={250}
+                        height={250}
+                      />
+                      <MDBCardBody>
+                        <MDBBtn
+                          outline
+                          rounded
+                          className="mx-2"
+                          color="info"
+                          onClick={() => saveFile(url)}
+                          target="_blank"
+                        >
+                          Download
+                        </MDBBtn>
+                        <MDBBtn
+                          outline
+                          rounded
+                          className="mx-2 my-2"
+                          color="danger"
+                          onClick={() => deleteurl(i, url)}
+                          target="_blank"
+                        >
+                          Delete
+                        </MDBBtn>
+                      </MDBCardBody>
+                    </MDBCard>
+                  </MDBCol>
+                );
+              }
+            })}
         </MDBRow>
       </MDBContainer>
     </div>
