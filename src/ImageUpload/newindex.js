@@ -141,22 +141,23 @@ function Newindex() {
   const saveFile = (url) => {
     saveAs(url, "example.pdf");
   };
-  const deleteurl=(urlid,url)=>{
-      console.log(urlid);
-      const db = getDatabase();
-      var fileRef = storage.refFromURL(url);
-      // Delete the file using the delete() method 
-      fileRef.delete().then(function () {
-          // File deleted successfully
-          console.log("File Deleted")
-          const updates = {};
-          updates["/TempusersTest/hemanth/attachments/"+urlid] = null;
-          update(ref(db), updates);
-
-      }).catch(function (error) {
-          // Some Error occurred
+  const deleteurl = (urlid, url) => {
+    console.log(urlid);
+    const db = getDatabase();
+    var fileRef = storage.refFromURL(url);
+    // Delete the file using the delete() method
+    fileRef
+      .delete()
+      .then(function() {
+        // File deleted successfully
+        console.log("File Deleted");
+        const updates = {};
+        updates["/TempusersTest/hemanth/attachments/" + urlid] = null;
+        update(ref(db), updates);
+      })
+      .catch(function(error) {
+        // Some Error occurred
       });
-    
   };
 
   const copyText = (entryText) => {
@@ -190,6 +191,7 @@ function Newindex() {
         <button onClick={handleUpload} type="submit">
           UPLOAD
         </button>
+        <br />
         <br />
         <span>{status}</span>
       </form>
@@ -228,7 +230,7 @@ function Newindex() {
                       rounded
                       className="mx-2"
                       color="info"
-                      onClick={() => deleteurl(i,url)}
+                      onClick={() => deleteurl(i, url)}
                       target="_blank"
                     >
                       Delete
