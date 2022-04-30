@@ -55,6 +55,8 @@ function Newindex() {
 
   // modal box for delete confirmation
   const [staticModal, setStaticModal] = useState(false);
+  const [deleteitem, setDeleteitem] = useState();
+  const [deleteitemurl, setDeleteitemurl] = useState("");
   const toggleShow = () => setStaticModal(!staticModal);
 
   // get files urls from firebase
@@ -178,7 +180,6 @@ function Newindex() {
   };
 
   const deleteurl = (urlid, url) => {
-    console.log(urlid);
     const db = getDatabase();
     var fileRef = storage.refFromURL(url);
 
@@ -257,6 +258,7 @@ function Newindex() {
           filesurls &&
             filesurls.map((url, i) => {
               if (url !== "no_file") {
+                console.log(i);
                 return (
                   <MDBCol xl="3" sm="3" key={i}>
                     <MDBBadge
@@ -292,7 +294,13 @@ function Newindex() {
                           rounded
                           className="mx-2 my-2"
                           color="danger"
-                          onClick={toggleShow}
+                          // onClick={toggleShow}
+                          onClick={() => {
+                            setDeleteitem(i);
+                            setDeleteitemurl(url);
+                            setStaticModal(!staticModal);
+
+                          }}
                         >
                           Delete File
                         </MDBBtn>
@@ -324,7 +332,8 @@ function Newindex() {
                                 </MDBBtn>
                                 <MDBBtn
                                   color="danger"
-                                  onClick={() => deleteurl(i, url)}
+                                  onClick={() => {
+                                    deleteurl(deleteitem, deleteitemurl)}}
                                 >
                                   Delete
                                 </MDBBtn>
