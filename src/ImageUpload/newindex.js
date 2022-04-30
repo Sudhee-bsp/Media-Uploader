@@ -333,7 +333,10 @@ function Newindex() {
                                 <MDBBtn
                                   color="danger"
                                   onClick={() => {
-                                    deleteurl(deleteitem, deleteitemurl)}}
+                                    deleteurl(deleteitem, deleteitemurl)
+                                    setStaticModal(!staticModal);
+                                  }
+                                  }
                                 >
                                   Delete
                                 </MDBBtn>
