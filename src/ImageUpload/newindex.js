@@ -48,11 +48,6 @@ function Newindex() {
   // setting filesurls from firebase
   const [filesurls, setFilesurls] = useState([]);
 
-  // all file metadata
-  const [filename, setFilename] = useState("");
-  const [filetype, setFiletype] = useState("");
-  const [filesize, setFilesize] = useState("");
-
   // modal box for delete confirmation
   const [staticModal, setStaticModal] = useState(false);
   const [deleteitem, setDeleteitem] = useState();
@@ -112,23 +107,10 @@ function Newindex() {
               setFilesurls((prevState) => [...prevState, urls]);
               setImages([]);
               setNumfiles(0);
-              setStatus("(Done, UPLOADED!)");
+              setStatus("( Uploaded Successfully! )");
             });
         }
       );
-
-      const storageRef = getStorage();
-      const fileRef = sRef(storageRef, `images/${image.name}`);
-      // Get metadata properties
-      getMetadata(fileRef)
-        .then((metadata) => {
-          setFilename(metadata.name);
-          setFiletype(metadata.contentType);
-          setFilesize(metadata.size);
-        })
-        .catch((error) => {
-          console.log("Couldn't fetch metadata");
-        });
     });
     console.log(filesurls);
     Promise.all(promises)
@@ -139,8 +121,6 @@ function Newindex() {
   };
 
   if (urls.length !== 0) {
-    console.log(urls.length);
-    console.log(urls);
     const db = getDatabase();
 
     // update just urls in realtime firebase
@@ -193,7 +173,8 @@ function Newindex() {
         updates["/TempusersTest/hemanth/attachments/" + urlid] = "no_file";
         update(ref(db), updates)
           .then(() => {
-            console.log("URL deleted");
+            // console.log("URL deleted");
+            toggleShow();
           })
           .catch((error) => {
             console.log(error);
@@ -202,12 +183,26 @@ function Newindex() {
       .catch(function(error) {
         console.log(error);
       });
-
-    
   };
 
-  const copyText = (entryText, i) => {
-    navigator.clipboard.writeText(entryText);
+  const copyText = (url, i) => {
+    navigator.clipboard.writeText(url);
+  };
+
+  // code for getting file metadata
+  const metaData = () => {
+    // console.log(url);
+    // storage
+    //   .refFromURL(url)
+    //   .getMetadata()
+    //   .then((metadata) => {
+    //     setFilename(metadata.name);
+    //     setFiletype(metadata.contentType);
+    //     setFilesize(metadata.size);
+    //   })
+    //   .catch((error) => {
+    //     console.log("Couldn't fetch metadata");
+    //   });
   };
 
   return (
@@ -258,7 +253,6 @@ function Newindex() {
           filesurls &&
             filesurls.map((url, i) => {
               if (url !== "no_file") {
-                console.log(i);
                 return (
                   <MDBCol xl="3" sm="3" key={i}>
                     <MDBBadge
@@ -299,7 +293,6 @@ function Newindex() {
                             setDeleteitem(i);
                             setDeleteitemurl(url);
                             setStaticModal(!staticModal);
-
                           }}
                         >
                           Delete File
@@ -333,10 +326,8 @@ function Newindex() {
                                 <MDBBtn
                                   color="danger"
                                   onClick={() => {
-                                    deleteurl(deleteitem, deleteitemurl)
-                                    setStaticModal(!staticModal);
-                                  }
-                                  }
+                                    deleteurl(deleteitem, deleteitemurl);
+                                  }}
                                 >
                                   Delete
                                 </MDBBtn>
